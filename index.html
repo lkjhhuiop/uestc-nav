@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="成电寻路，品学楼环形教学区的静态路径规划。">
+  <title>成电寻路 · 每一次到达，都更简单</title>
+  <link rel="icon" type="image/svg+xml" href="assets/icons/compass.svg">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="vendor/auroraqua/materials.css">
+  <link rel="stylesheet" href="css/glass.css">
+  <script defer src="vendor/asciify-engine/wave.global.js"></script>
+  <script defer src="js/background.js"></script>
+  <script defer src="js/data.js"></script>
+  <script defer src="js/dijkstra.js"></script>
+  <script defer src="js/map.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <div id="asciiBackdrop" class="ascii-backdrop" aria-hidden="true"><div class="light-field light-field-a"></div><div class="light-field light-field-b"></div><div class="light-field light-field-c"></div></div>
+  <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
+  <main class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="#homePage" id="brandHome" aria-label="成电寻路首页"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m5 19 5-14 9 9-14 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10 5 1.5 7.5L19 14" stroke="currentColor" stroke-width="1.8"/></svg></span><span><span class="brand-name">成电寻路</span><span class="brand-sub">CAMPUS WAYFINDER</span></span></a>
+      <div class="header-actions"><span class="campus-label"><span class="campus-dot"></span>清水河校区 <span class="campus-divider">/</span> 品学楼</span><button id="themeToggle" class="round-button theme-button" aria-label="切换至深色模式" aria-pressed="false" title="切换深色模式"><span class="theme-glyph" aria-hidden="true"></span></button></div>
+    </header>
+    <section id="homePage" aria-labelledby="homeTitle">
+      <div class="page-intro"><div><p class="eyebrow">让每一次到达，都更简单</p><h1 id="homeTitle" tabindex="-1">下一站，<span>去哪里？</span></h1></div><p class="intro-note">从校园入口到教室门口。<br>选好起点，剩下的路交给地图。</p></div>
+      <div class="home-grid">
+        <div class="map-column liquid-glass">
+          <div id="homeMapPanel" class="map-panel glass" aria-label="起终点位置预览"></div>
+          <div class="map-caption"><span>✧ 01起点 &nbsp; → 编号递增 &nbsp; △ 楼梯 &nbsp; ▣ 建筑入口</span><span>地面道路与环廊均可双向通行</span></div>
+        </div>
+        <div class="planner-column liquid-glass liquid-glass-hover-fade">
+          <form id="planForm" class="planner">
+            <div class="card-heading"><div><p class="eyebrow">PLAN YOUR WALK</p><h2>规划你的路线</h2></div><span class="small-tag">步行</span></div>
+            <div class="endpoint-stack input-glass">
+              <div class="endpoint-field">
+                <div class="field-heading"><span class="field-dot start-dot"></span><label for="startSelect">从哪里出发</label><span>起点</span></div>
+                <select id="startSelect" aria-label="选择起点"></select>
+              </div>
+              <div class="field-divider"><span></span><button id="swapPoints" type="button" class="round-button swap-button" aria-label="交换起点和终点">⇅</button></div>
+              <div class="endpoint-field">
+                <div class="field-heading"><span class="field-dot end-dot"></span><label for="endSelect">想去哪里</label><span>终点</span></div>
+                <select id="endSelect" aria-label="选择终点"></select>
+              </div>
+            </div>
+            <div class="search-field"><span class="search-symbol" aria-hidden="true"></span><input id="roomSearch" type="search" placeholder="搜索教室门牌，如 B312" list="roomSuggestions" aria-label="按门牌查找教室" autocomplete="off"><datalist id="roomSuggestions"></datalist></div>
+            <div class="quick-heading"><span>常用出发点</span><span>室外入口</span></div><div id="entranceButtons" class="entrance-grid" aria-label="常用入口"></div>
+            <div class="quick-heading"><span>常用目的地</span><span>点击选择</span></div><div id="destinationButtons" class="destination-grid"></div>
+            <p id="selectionInfo" class="selection-info" aria-live="polite"></p>
+            <p id="errorMessage" class="error" role="alert" hidden></p>
+            <button class="primary" type="submit"><span>开始规划</span><span class="button-arrow" aria-hidden="true">↗</span></button>
+            <p class="planner-footnote"><span class="privacy-symbol" aria-hidden="true"></span>无需定位 · 手动选点 · 离线可用</p>
+          </form>
+        </div>
+      </div>
+    </section>
+    <section id="routePage" hidden aria-labelledby="routeTitle">
+      <div class="page-heading"><button class="round-button" data-page="homePage" aria-label="返回首页">←</button><div><p class="eyebrow">路线规划</p><h1 id="routeTitle" tabindex="-1">每一步，都有方向。</h1></div><button class="quiet-button" data-page="homePage">修改路线</button></div>
+      <div class="route-grid">
+        <aside class="route-sidebar liquid-glass">
+          <div class="route-summary glass"><span class="small-tag">推荐步行路线</span><h2 class="route-label"></h2><div class="stats"><div><strong id="minutes"></strong><span>步行 / 分钟</span></div><div><strong id="distance"></strong><span>路程 / 米</span></div><div><strong id="changes"></strong><span>上下楼 / 次</span></div></div><p id="routeHint" class="route-hint"></p></div>
+          <div class="journey glass"><h3>途经楼层</h3><div id="floorJourney" class="floor-journey"></div><p>点击楼层，查看对应路线段</p></div>
+          <div class="route-steps"><div class="route-steps-heading"><div><span class="route-steps-kicker">YOUR JOURNEY</span><h3>分层指引</h3></div><span id="routeStepCount" class="route-step-count"></span></div><p class="route-steps-help">每层一条 · 悬停预览，点击固定路线</p><ol id="routeStepList" class="route-step-list" aria-label="分层路线指引，悬停或点击以在地图中查看"></ol></div>
+          <button id="viewDetails" class="route-detail-link" type="button"><span>查看分层路线说明</span><span aria-hidden="true">↗</span></button>
+        </aside>
+        <div class="map-column liquid-glass"><div id="routeMapPanel" class="map-panel glass" aria-label="规划路线地图"></div><p id="floorMessage" class="floor-message" aria-live="polite"></p></div>
+      </div>
+    </section>
+    <section id="detailPage" hidden aria-labelledby="detailTitle">
+      <div class="page-heading"><button class="round-button" data-page="routePage" aria-label="返回路线地图">←</button><div><p class="eyebrow">步行指南</p><h1 id="detailTitle" tabindex="-1">跟着路线，轻松到达。</h1></div></div>
+      <div class="detail-grid"><aside><div class="detail-summary glass"><span class="small-tag">你的到达指南</span><h2 class="route-label"></h2><p id="detailMeta"></p><div class="detail-symbol" aria-hidden="true">↗</div><button class="primary" data-page="routePage"><span>返回路线地图</span><span class="button-arrow" aria-hidden="true">↗</span></button></div></aside><div><ol id="timeline" class="timeline"></ol><div class="arrival glass"><span aria-hidden="true">✓</span><div><strong>下一站，新的收获。</strong><p>祝你学习顺利。</p></div></div></div></div>
+    </section>
+    <footer class="app-footer"><span><b>UESTC</b> 求实求真 · 大气大为</span><span>校园路径规划原型 &nbsp; · &nbsp; 地图与距离为示意</span></footer>
+  </main>
+</body>
+</html>

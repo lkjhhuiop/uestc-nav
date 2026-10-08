@@ -1,0 +1,98 @@
+/* Auroraqua 接入适配。材质与按钮动效来自 vendor/auroraqua/materials.css。
+   此处只处理现有布局、成电蓝、深色文字和辅助功能。
+   标签从上游 TabButton.jsx 转译，按 MPL-2.0 提供，见 vendor/auroraqua/LICENSE。 */
+body{isolation:isolate}
+.app-shell{position:relative;z-index:2}
+.ambient{display:none}
+.ascii-backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:linear-gradient(145deg,#f8fbff 0%,#e8f2ff 38%,#dffbff 72%,#f4f9ff 100%)}
+.ascii-backdrop::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.4),transparent 38%,rgba(255,255,255,.16) 58%,transparent 78%);mix-blend-mode:soft-light;animation:lightSweep 18s ease-in-out infinite alternate}
+.ascii-backdrop canvas{z-index:1!important;mix-blend-mode:multiply;filter:saturate(1.08) contrast(1.02);opacity:.5!important}
+.light-field{position:absolute;width:78vmax;height:78vmax;border-radius:50%;filter:blur(92px);will-change:transform,opacity;transform:translate3d(0,0,0)}
+.light-field-a{left:-32vmax;top:-38vmax;background:radial-gradient(circle,rgba(25,72,222,.62) 0%,rgba(38,143,255,.3) 38%,transparent 70%);animation:fieldDriftA 24s cubic-bezier(.45,.05,.55,.95) infinite alternate}
+.light-field-b{right:-36vmax;top:-22vmax;background:radial-gradient(circle,rgba(13,215,224,.55) 0%,rgba(49,169,255,.27) 40%,transparent 72%);animation:fieldDriftB 30s cubic-bezier(.45,.05,.55,.95) infinite alternate}
+.light-field-c{left:12vw;bottom:-55vmax;background:radial-gradient(circle,rgba(0,47,167,.42) 0%,rgba(31,207,212,.24) 42%,transparent 72%);animation:fieldDriftC 35s cubic-bezier(.45,.05,.55,.95) infinite alternate}
+@keyframes fieldDriftA{0%{transform:translate3d(-2vw,-2vh,0) scale(.9);opacity:.58}48%{transform:translate3d(18vw,12vh,0) scale(1.08);opacity:.82}100%{transform:translate3d(8vw,28vh,0) scale(.98);opacity:.68}}
+@keyframes fieldDriftB{0%{transform:translate3d(4vw,-8vh,0) scale(1);opacity:.62}50%{transform:translate3d(-20vw,18vh,0) scale(.88);opacity:.78}100%{transform:translate3d(-8vw,34vh,0) scale(1.12);opacity:.56}}
+@keyframes fieldDriftC{0%{transform:translate3d(-8vw,8vh,0) scale(.9);opacity:.45}55%{transform:translate3d(16vw,-22vh,0) scale(1.1);opacity:.72}100%{transform:translate3d(30vw,-8vh,0) scale(.96);opacity:.52}}
+@keyframes lightSweep{0%{transform:translate3d(-12%,0,0);opacity:.45}100%{transform:translate3d(12%,0,0);opacity:.8}}
+:root[data-theme="dark"] .ascii-backdrop{background:linear-gradient(145deg,#030923 0%,#07183c 38%,#062f48 72%,#030b22 100%)}
+:root[data-theme="dark"] .ascii-backdrop::after{background:linear-gradient(115deg,rgba(22,81,255,.22),transparent 35%,rgba(0,235,229,.18) 58%,transparent 82%);mix-blend-mode:screen}
+:root[data-theme="dark"] .ascii-backdrop canvas{mix-blend-mode:screen;opacity:.58!important;filter:saturate(1.2) brightness(1.08)}
+:root[data-theme="dark"] .light-field-a{background:radial-gradient(circle,rgba(0,47,167,.8) 0%,rgba(19,72,203,.34) 42%,transparent 72%)}
+:root[data-theme="dark"] .light-field-b{background:radial-gradient(circle,rgba(0,221,218,.56) 0%,rgba(0,120,180,.24) 45%,transparent 72%)}
+:root[data-theme="dark"] .light-field-c{background:radial-gradient(circle,rgba(24,76,229,.54) 0%,rgba(0,202,210,.2) 44%,transparent 72%)}
+.home-grid,.route-grid{gap:20px;padding:0;border:0;overflow:visible;background:none;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.planner-column,.route-sidebar,.home-grid>.map-column,.route-grid>.map-column{border-radius:26px;min-width:0}
+.home-grid>.planner-column,.route-grid>.route-sidebar{border:1px solid rgba(255,255,255,.25)}
+.planner{padding:26px 22px}.route-sidebar{padding:26px 22px}
+.map-panel.glass{background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.endpoint-stack.input-glass{padding:0;border-radius:18px;color:var(--text)}
+.search-field.input-glass{padding:0 10px;color:var(--text)}
+.glass-button{color:var(--text);font-family:inherit;isolation:isolate}
+.glass-button>*{position:relative;z-index:1}
+.glass-button:active:not(:disabled){transform:scale(.98)}
+.map-tools .glass-button:hover .ui-icon,.round-button.glass-button:hover .ui-icon{transform:none}
+.liquid-glass{background:linear-gradient(145deg,rgba(255,255,255,.25) 0%,rgba(255,255,255,.12) 52%,rgba(215,242,255,.16) 100%);border-color:rgba(255,255,255,.42);box-shadow:0 12px 38px rgba(26,68,115,.12),inset 0 1px 0 rgba(255,255,255,.76),inset 0 -1px 0 rgba(113,205,236,.2);backdrop-filter:blur(14px) saturate(1.28) brightness(1.025);-webkit-backdrop-filter:blur(14px) saturate(1.28) brightness(1.025);transition:box-shadow .3s ease,border-color .3s ease,background-color .3s ease}
+.round-button.glass-button,.map-tools .glass-button{padding:0;flex-shrink:0;border-radius:50%}
+.primary.glass-button{color:#fff;background:linear-gradient(135deg,#1374e8e6,#075dced9);border-radius:999px;min-height:49px}
+.primary.glass-button:hover{background:linear-gradient(135deg,#1374e8,#075dcee8);filter:none}
+.primary.glass-button::after{display:none}
+.entrance-grid .glass-button,.destination-grid .glass-button{padding:7px 0;font-size:11px;border-radius:999px}
+.entrance-grid .glass-button.active{color:#fff}
+.floor-tabs,.block-tabs{isolation:isolate}
+.floor-tabs .glass-button,.block-tabs .glass-button{border:0;border-radius:999px;padding:6px 10px}
+/* TabButton 的选中底色、内高光与0.7秒扫光；粉色色相改为校园蓝。 */
+.floor-tabs button.active,.block-tabs button.active{background:linear-gradient(135deg,rgba(188,218,255,.8),rgba(188,218,255,.4));box-shadow:0 0 20px rgba(49,131,233,.3),inset 0 1px 0 rgba(255,255,255,.6);color:var(--blue-text);animation:none}
+.floor-tabs button.active::before,.block-tabs button.active::before{transition:left .7s ease}
+.floor-tabs button:not(.active),.block-tabs button:not(.active){background:rgba(255,255,255,.3)}
+.floor-tabs button:not(.active):hover,.block-tabs button:not(.active):hover{background:rgba(255,255,255,.5)}
+.header-actions.liquid-glass,.map-tools.liquid-glass,.map-overlay.liquid-glass,.overview-lock.liquid-glass{border-radius:999px}
+.step-card.liquid-glass,.detail-summary.liquid-glass,.arrival.liquid-glass{backdrop-filter:blur(14px) saturate(1.28) brightness(1.025);-webkit-backdrop-filter:blur(14px) saturate(1.28) brightness(1.025)}
+.overview-lock{align-self:center}
+:root[data-theme="dark"] .glass-button,:root[data-theme="dark"] .input-glass{background:rgba(22,40,64,.45);color:var(--text)}
+:root[data-theme="dark"] .liquid-glass{background:linear-gradient(145deg,rgba(43,74,112,.27),rgba(15,39,68,.16) 54%,rgba(7,91,115,.18));border-color:rgba(185,226,255,.19);box-shadow:0 14px 42px rgba(0,5,24,.26),inset 0 1px 0 rgba(222,244,255,.2),inset 0 -1px 0 rgba(0,220,228,.12);backdrop-filter:blur(14px) saturate(1.24) brightness(.94);-webkit-backdrop-filter:blur(14px) saturate(1.24) brightness(.94)}
+:root[data-theme="dark"] .glass-button:hover{background:rgba(50,77,105,.55)}
+:root[data-theme="dark"] .primary.glass-button{background:linear-gradient(135deg,#1374e8e6,#075dced9);color:#fff}
+:root[data-theme="dark"] .floor-tabs button.active,:root[data-theme="dark"] .block-tabs button.active{background:linear-gradient(135deg,#3b77b880,#3b77b840);color:#d7ebff}
+@media(max-width:1099px){.home-grid,.route-grid{gap:14px}.map-panel.glass{padding-left:14px;padding-right:14px}.planner,.route-sidebar{padding:23px 18px}}
+@media(max-width:759px){
+ .home-grid,.route-grid{gap:15px}.home-grid>.planner-column,.route-sidebar{border:1px solid rgba(255,255,255,.25)}
+ .planner-column,.route-sidebar,.home-grid>.map-column,.route-grid>.map-column{border-radius:23px}
+ .map-panel.glass{padding:16px 12px 0}.map-panel-header{flex-wrap:wrap;gap:8px}
+ .floor-tabs .glass-button,.block-tabs .glass-button{padding:5px 5px;min-height:40px;font-size:11px}
+ .planner{padding:23px 18px}.overview-lock{align-self:flex-start}
+}
+@media(orientation:landscape) and (min-width:650px) and (max-width:980px){.home-grid,.route-grid{grid-template-columns:260px minmax(0,1fr)}.home-grid>.planner-column{border:1px solid rgba(255,255,255,.25)}.map-panel-header{flex-wrap:wrap}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.liquid-glass,.input-glass,.glass-button{background:var(--solid)}}
+@media(prefers-reduced-transparency:reduce){
+ .liquid-glass,.input-glass,.glass-button{background:var(--solid)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+ .primary.glass-button,.entrance-grid .glass-button.active{background:var(--blue)!important;color:#fff}
+}
+@media(prefers-reduced-motion:reduce){.liquid-glass,.glass-button,.glass-button::before{transition:none!important}.glass-button:hover,.glass-button:active{transform:none!important}.glass-button::before{display:none}.light-field,.ascii-backdrop::after{animation:none!important}}
+
+/* 路线页让文字步骤与地图同屏：步骤区独立滚动，概览始终可见。 */
+.route-grid>.route-sidebar{min-height:0}
+.route-steps{display:flex;flex:1;flex-direction:column;min-height:0;margin-top:3px;padding-top:17px;border-top:1px solid var(--line)}
+.route-steps-heading{display:flex;align-items:end;justify-content:space-between;gap:10px}
+.route-steps-kicker{display:block;margin-bottom:3px;color:var(--faint);font-size:9px;letter-spacing:1.7px}
+.route-steps-heading h3{font-size:15px;font-weight:650;letter-spacing:.2px}
+.route-step-count{color:var(--muted);font-size:10px;white-space:nowrap}
+.route-steps-help{margin:4px 0 10px;color:var(--faint);font-size:10px}
+.route-step-list{list-style:none;display:flex;flex:1;flex-direction:column;gap:7px;min-height:210px;height:clamp(220px,39vh,455px);max-height:455px;margin:0;padding:2px 7px 4px 0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(103,158,211,.58) transparent}
+.route-step-list::-webkit-scrollbar{width:6px}.route-step-list::-webkit-scrollbar-thumb{border-radius:999px;background:rgba(103,158,211,.58)}
+.route-step-list li{min-width:0}
+.route-step{display:grid;grid-template-columns:27px minmax(0,1fr) auto;align-items:start;gap:9px;width:100%;padding:11px 9px;text-align:left;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.12);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.1);transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
+.route-step:hover,.route-step:focus-visible,.route-step.active{background:rgba(91,165,244,.17);border-color:var(--step-color);box-shadow:0 5px 17px rgba(16,76,150,.13),inset 3px 0 0 var(--step-color);transform:translateX(2px)}
+.route-step-number{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--step-color);color:#fff;font-size:11px;font-weight:750;box-shadow:0 3px 9px rgba(12,35,73,.16)}
+.route-step-body{display:flex;flex-direction:column;min-width:0;gap:4px}.route-step-body strong{font-size:11px;font-weight:650;line-height:1.45}.route-step-body small{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--muted);font-size:10px;line-height:1.45}
+.route-step-meta{padding-top:3px;color:var(--step-color);font-size:9px;font-weight:700;white-space:nowrap}
+.route-detail-link{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin-top:11px;padding:8px 4px;background:transparent;color:var(--blue-text);font-size:11px;font-weight:600;text-align:left;border-top:1px solid var(--line)}
+.route-detail-link:hover{text-decoration:underline}
+.map-overlay.overview-legend{max-width:calc(100% - 85px);flex-wrap:wrap;gap:5px 10px;padding:8px 11px}
+.map-overlay.overview-legend .legend-line{width:14px;height:4px}
+.route-interacting .route-line{animation:none!important;stroke-dasharray:none!important;stroke-dashoffset:0!important}
+:root[data-theme="dark"] .route-step{background:rgba(20,48,85,.28)}
+:root[data-theme="dark"] .route-step:hover,:root[data-theme="dark"] .route-step:focus-visible,:root[data-theme="dark"] .route-step.active{background:rgba(33,79,129,.55)}
+@media(max-width:759px){.route-steps{margin-top:0}.route-step-list{flex:none;height:260px;min-height:0;max-height:260px}.route-detail-link{margin-top:8px}.map-overlay.overview-legend{max-width:calc(100% - 65px)}}
+@media(orientation:landscape) and (min-width:650px) and (max-width:980px){.route-step-list{height:clamp(180px,34vh,300px);min-height:180px}.route-step{grid-template-columns:23px minmax(0,1fr);gap:6px;padding:9px 6px}.route-step-number{width:23px;height:23px}.route-step-meta{grid-column:2;padding-top:0}}
+@media(prefers-reduced-motion:reduce){.route-step{transition:none}.route-step:hover,.route-step:focus-visible,.route-step.active{transform:none}}
