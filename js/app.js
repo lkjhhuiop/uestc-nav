@@ -103,6 +103,13 @@ const roomSearch=document.getElementById('roomSearch');
 const motionPreference=window.matchMedia('(prefers-reduced-motion: reduce)');
 let currentRoute=null;
 let selectedRouteStep=null,hoveredRouteStep=null,routeFloorBeforeHover=null;
+let manualOrigin=null;
+function setManualOrigin(id){
+  if(!byId.has(id))return;
+  startSelect.value=id;manualOrigin={nodeId:id,at:Date.now(),date:TimetableCore.nowParts().date};
+  window.dispatchEvent(new Event('originchange'));
+}
+function clearManualOrigin(){manualOrigin=null;window.dispatchEvent(new Event('originchange'));}
 const mapStates={home:{floor:'outdoor',block:'all',zoom:1,panX:0,panY:0},route:{floor:'outdoor',block:'all',zoom:1,panX:0,panY:0}};
 function button(text,className,onClick) {
   const element=document.createElement('button');element.type='button';element.className=className==='step-map-button'?className:`glass-button ${className||''}`;
@@ -124,7 +131,7 @@ function addOptions(select) {
 addOptions(startSelect);addOptions(endSelect);startSelect.value='ENTRANCE_4';endSelect.value='B312';
 nodes.filter(n=>n.type==='room').forEach(n=>document.getElementById('roomSuggestions').append(new Option(`${n.block}区 · ${n.floor}`,n.id)));
 for(let i=1;i<=5;i++) {
-  const id=`ENTRANCE_${i}`,element=button(`入口${i}`,'',()=>{startSelect.value=id;syncSelection();});
+  const id=`ENTRANCE_${i}`,element=button(`入口${i}`,'',()=>{setManualOrigin(id);syncSelection();});
   element.dataset.node=id;document.getElementById('entranceButtons').append(element);
 }
 destinations.forEach(id=>{
@@ -148,13 +155,13 @@ function syncSelection() {
   document.getElementById('errorMessage').hidden=true;
   renderMap('home');
 }
-startSelect.addEventListener('change',()=>{roomSearch.value='';syncSelection();});
+startSelect.addEventListener('change',()=>{setManualOrigin(startSelect.value);roomSearch.value='';syncSelection();});
 endSelect.addEventListener('change',()=>{roomSearch.value='';syncSelection();});
 roomSearch.addEventListener('input',()=>{
   const id=roomSearch.value.trim().toUpperCase();
   if(byId.has(id)&&byId.get(id).type==='room') {endSelect.value=id;syncSelection();}
 });
-document.getElementById('swapPoints').addEventListener('click',()=>{const start=startSelect.value;startSelect.value=endSelect.value;endSelect.value=start;roomSearch.value='';syncSelection();});
+document.getElementById('swapPoints').addEventListener('click',()=>{const start=startSelect.value;setManualOrigin(endSelect.value);endSelect.value=start;roomSearch.value='';syncSelection();});
 function showPage(id) {
   document.querySelectorAll('main > section').forEach(page=>{page.hidden=page.id!==id;});
   if(id==='homePage')renderMap('home');
@@ -172,6 +179,7 @@ function showPage(id) {
     page.addEventListener('animationend',releasePageLayer);
   }
   window.scrollTo(0,0);
+  window.dispatchEvent(new CustomEvent('pagechange',{detail:{id}}));
   const heading=document.querySelector(`#${id} h1`);if(heading)heading.focus({preventScroll:true});
 }
 document.querySelectorAll('[data-page]').forEach(element=>element.addEventListener('click',()=>showPage(element.dataset.page)));
@@ -245,7 +253,7 @@ function mountMap(scope) {
     if(dragged)return;
     const target=event.target.closest('[data-node],[data-entrance],[data-block]');if(!target)return;
     if(target.dataset.block) {if(scope==='home')chooseBlock(scope,target.dataset.block);return;}
-    if(target.dataset.entrance)startSelect.value=target.dataset.entrance;
+    if(target.dataset.entrance)setManualOrigin(target.dataset.entrance);
     if(target.dataset.node)endSelect.value=target.dataset.node;
     roomSearch.value='';
     if(scope==='route') {
@@ -270,6 +278,23 @@ function mountMap(scope) {
   });
   function endDrag(){drag=null;svg.classList.remove('dragging');}
   svg.addEventListener('pointerup',endDrag);svg.addEventListener('pointercancel',endDrag);
+  panel.querySelector('.map-stage').addEventListener('wheel',event=>{
+    if(event.ctrlKey||!event.deltaY)return;
+    event.preventDefault();
+    const state=mapStates[scope],base=viewBoxFor(state.block),box=svg.viewBox.baseVal;
+    const ctm=svg.getScreenCTM();if(!ctm)return;
+    const pointer=new DOMPoint(event.clientX,event.clientY).matrixTransform(ctm.inverse());
+    const fx=Math.max(0,Math.min(1,(pointer.x-box.x)/box.width)),fy=Math.max(0,Math.min(1,(pointer.y-box.y)/box.height));
+    const px=box.x+fx*box.width,py=box.y+fy*box.height;
+    const delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?svg.clientHeight:1);
+    const zoom=Math.max(1,Math.min(3,state.zoom*Math.exp(-delta*.0015)));
+    if(zoom===state.zoom)return;
+    state.zoom=zoom;
+    const w=base[2]/zoom,h=base[3]/zoom;
+    state.panX=px-fx*w-base[0]-(base[2]-w)/2;
+    state.panY=py-fy*h-base[1]-(base[3]-h)/2;
+    clampPan(state);updateView(scope);
+  },{passive:false});
 }
 function clampPan(state) {
   const box=viewBoxFor(state.block);
@@ -313,8 +338,7 @@ function renderMap(scope) {
       const node=pair[0];
       if(nodeVisibleOnFloor(node,state.floor))overlay+=pinMarkup(node.x,node.y,pair[1],pair[2]);
       else if(state.floor==='outdoor'&&node.block) {
-        const r=buildings[node.block].ring;
-        overlay+=pinMarkup(r[0]+r[2]/2,r[1]+r[3]/2+48,pair[1],node.name);
+        overlay+=pinMarkup(node.x,node.y,pair[1],`${node.name} · ${node.floor}`);
       }
     });
   }
@@ -436,13 +460,23 @@ document.getElementById('planForm').addEventListener('submit',event=>{
     error.textContent='未找到这个门牌。C区各层房号不同，部分教室带 A/B/C 后缀，请按现场门牌输入。';error.hidden=false;roomSearch.focus();return;
   }
   if(query)endSelect.value=query;
-  currentRoute=planRoute(startSelect.value,endSelect.value);
-  if(!currentRoute.path.length) {error.textContent='这两个地点暂未连通，请更换起点或终点。';error.hidden=false;return;}
+  startNavigation(startSelect.value,endSelect.value);
+});
+// 手动选点与课程卡片共用完整路线展示，避免只更新下拉框而留下旧路线。
+function startNavigation(startId,endId,courseContext='') {
+  const error=document.getElementById('errorMessage');
+  if(!byId.has(startId)||!byId.has(endId))return false;
+  startSelect.value=startId;endSelect.value=endId;roomSearch.value='';syncSelection();
+  currentRoute=planRoute(startId,endId);
+  if(!currentRoute.path.length) {error.textContent='这两个地点暂未连通，请更换起点或终点。';error.hidden=false;showPage('homePage');return false;}
+  clearManualOrigin(); // 规划不是到达；历史路线的起点不作为下一次的当前位置。
   error.hidden=true;currentRoute.steps=routeSteps(currentRoute.path);
   currentRoute.floorSteps=summarizeRouteFloors(currentRoute.path,currentRoute.steps);
   selectedRouteStep=null;hoveredRouteStep=null;routeFloorBeforeHover=null;
   const changes=currentRoute.steps.filter(step=>step.kind==='stairs').length;
   const minutes=Math.ceil(currentRoute.distance/80);
+  document.querySelectorAll('.course-route-context').forEach(element=>{element.hidden=!courseContext;element.textContent=courseContext;});
+  document.querySelectorAll('.course-route-back').forEach(element=>{element.hidden=!courseContext;});
   document.querySelectorAll('.route-label').forEach(element=>{element.textContent=`${byId.get(startSelect.value).name} → ${byId.get(endSelect.value).name}`;});
   animateNumber(document.getElementById('minutes'),minutes);
   animateNumber(document.getElementById('distance'),currentRoute.distance);
@@ -460,7 +494,8 @@ document.getElementById('planForm').addEventListener('submit',event=>{
   const routeMap=document.getElementById('routeMap');routeMap.classList.remove('route-interacting');
   document.querySelector('#routeMapPanel .route-layer').replaceChildren();
   renderRouteStepList();renderDetails();showPage('routePage');
-});
+  return true;
+}
 function renderDetails() {
   const list=document.getElementById('timeline');list.replaceChildren();
   currentRoute.floorSteps.forEach((step,index)=>{

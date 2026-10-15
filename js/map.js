@@ -117,9 +117,25 @@ function mapBaseMarkup(floor) {
       svg+=svgRect(r[0]+28,r[1]+28,r[2]-56,r[3]-56,'courtyard',8);
     }
     if(outdoor) {
+      // 总览显示一层结构；装饰房间不截获分区选择，也不冒充高层实际分隔。
+      const ring=rings.find(item=>item.block===block&&item.floor==='1F');
+      const points=pointString(ring.ids.concat(ring.ids[0]));
+      svg+='<g class="outdoor-structure" pointer-events="none" aria-hidden="true">';
+      svg+=lineMarkup(points,'ring-base')+lineMarkup(points,'ring-center');
+      edges.filter(e=>e.kind==='access'&&byId.get(e.from).block===block&&!buildingEntrances.some(entry=>entry.slant&&entry.inside===e.from)).forEach(e=>{
+        const access=pointString([e.from,e.to]);svg+=lineMarkup(access,'road-edge')+lineMarkup(access,'road');
+      });
+      roomShapes.filter(room=>room.block===block&&room.floor==='1F').forEach(room=>{
+        const node=byId.get(room.id),door=byId.get(node.door),cls=`${room.inside?'room-inner':'room'} overview-room`;
+        svg+=`<line x1="${door.x}" y1="${door.y}" x2="${room.x}" y2="${room.y}" class="room-door"/>`;
+        svg+=room.polygon?cPolygon(room.polygon,cls):svgRect(room.x-room.w/2,room.y-room.h/2,room.w,room.h,cls,room.block==='C'?0:3);
+      });
+      nodes.filter(node=>node.block===block&&node.floor==='1F'&&node.type==='stairs').forEach(node=>{svg+=stairMarkup(node);});
+      if(block==='C')for(const side of Object.keys(cSlants))for(const [start,end] of [[0,.25],[.75,1]])svg+=cPolygon(cSlantZone(side,start,end),'rest-zone');
+      svg+='</g>';
       svg+=`<g class="map-block" data-block="${block}" role="button" tabindex="0" aria-label="查看${block}区楼层">`;
       svg+=svgRect(b[0],b[1],b[2],b[3],'block-hit',20).replace('class="block-hit"','fill="none" pointer-events="all"');
-      svg+=svgText(r[0]+r[2]/2,r[1]+r[3]/2-4,`${block} 区`)+svgText(r[0]+r[2]/2,r[1]+r[3]/2+22,`${info.floors}层 · 环形教学楼`,'map-sub')+'</g>';
+      svg+=svgText(r[0]+r[2]/2,r[1]+r[3]/2-4,`${block} 区`)+svgText(r[0]+r[2]/2,r[1]+r[3]/2+22,`${info.floors}层 · 一层结构示意`,'map-sub')+'</g>';
     } else {
       const ring=rings.find(item=>item.block===block && item.floor===floor);
       const points=pointString(ring.ids.concat(ring.ids[0]));

@@ -10,12 +10,16 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="vendor/auroraqua/materials.css">
   <link rel="stylesheet" href="css/glass.css">
+  <link rel="stylesheet" href="css/timetable.css">
+  <link rel="stylesheet" href="css/workbench.css">
   <script defer src="vendor/asciify-engine/wave.global.js"></script>
   <script defer src="js/background.js"></script>
   <script defer src="js/data.js"></script>
   <script defer src="js/dijkstra.js"></script>
   <script defer src="js/map.js"></script>
+  <script defer src="js/timetable-core.js"></script>
   <script defer src="js/app.js"></script>
+  <script defer src="js/timetable.js"></script>
 </head>
 <body>
   <div id="asciiBackdrop" class="ascii-backdrop" aria-hidden="true"><div class="light-field light-field-a"></div><div class="light-field light-field-b"></div><div class="light-field light-field-c"></div></div>
@@ -23,14 +27,18 @@
   <main class="app-shell">
     <header class="app-header">
       <a class="brand" href="#homePage" id="brandHome" aria-label="成电寻路首页"><span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m5 19 5-14 9 9-14 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m10 5 1.5 7.5L19 14" stroke="currentColor" stroke-width="1.8"/></svg></span><span><span class="brand-name">成电寻路</span><span class="brand-sub">CAMPUS WAYFINDER</span></span></a>
-      <div class="header-actions"><span class="campus-label"><span class="campus-dot"></span>清水河校区 <span class="campus-divider">/</span> 品学楼</span><button id="themeToggle" class="round-button theme-button" aria-label="切换至深色模式" aria-pressed="false" title="切换深色模式"><span class="theme-glyph" aria-hidden="true"></span></button></div>
+      <div class="header-actions"><span class="campus-label"><span class="campus-dot"></span>清水河校区 <span class="campus-divider">/</span> 品学楼</span><button type="button" class="schedule-button schedule-header-button" data-open-timetable>我的课表</button><button id="themeToggle" class="round-button theme-button" aria-label="切换至深色模式" aria-pressed="false" title="切换深色模式"><span class="theme-glyph" aria-hidden="true"></span></button></div>
     </header>
     <section id="homePage" aria-labelledby="homeTitle">
       <div class="page-intro"><div><p class="eyebrow">让每一次到达，都更简单</p><h1 id="homeTitle" tabindex="-1">下一站，<span>去哪里？</span></h1></div><p class="intro-note">从校园入口到教室门口。<br>选好起点，剩下的路交给地图。</p></div>
+      <div class="schedule-home liquid-glass" aria-label="课程导航">
+        <div class="schedule-home-copy"><p class="eyebrow" id="nextCourseKicker">课程与路线，一起安排</p><h2 id="nextCourseTitle">带着课表，去上课。</h2><p id="nextCourseMeta">导入教务课表，查看本周课程，一键前往品学楼教室。</p><div class="course-origin-row" id="courseOriginRow" hidden><span id="courseOriginHint"></span><button type="button" class="course-text-button" id="changeCourseOrigin">修改起点</button><button type="button" class="course-text-button" id="autoCourseOrigin" hidden>按课表选择</button></div></div>
+        <div class="schedule-actions"><button type="button" class="schedule-button schedule-accent" id="nextCourseGo" hidden>去上课 ↗</button><button type="button" class="schedule-button" data-open-timetable>查看课表</button><button type="button" class="schedule-button" data-import-timetable>导入课表</button></div>
+      </div>
       <div class="home-grid">
         <div class="map-column liquid-glass">
           <div id="homeMapPanel" class="map-panel glass" aria-label="起终点位置预览"></div>
-          <div class="map-caption"><span>✧ 01起点 &nbsp; → 编号递增 &nbsp; △ 楼梯 &nbsp; ▣ 建筑入口</span><span>地面道路与环廊均可双向通行</span></div>
+          <div class="map-caption"><span>✧ 01起点 &nbsp; → 编号递增 &nbsp; △ 楼梯 &nbsp; ▣ 建筑入口</span><span>滚轮缩放 · 放大后拖动 · 双向通行</span></div>
         </div>
         <div class="planner-column liquid-glass liquid-glass-hover-fade">
           <form id="planForm" class="planner">
@@ -61,7 +69,7 @@
       <div class="page-heading"><button class="round-button" data-page="homePage" aria-label="返回首页">←</button><div><p class="eyebrow">路线规划</p><h1 id="routeTitle" tabindex="-1">每一步，都有方向。</h1></div><button class="quiet-button" data-page="homePage">修改路线</button></div>
       <div class="route-grid">
         <aside class="route-sidebar liquid-glass">
-          <div class="route-summary glass"><span class="small-tag">推荐步行路线</span><h2 class="route-label"></h2><div class="stats"><div><strong id="minutes"></strong><span>步行 / 分钟</span></div><div><strong id="distance"></strong><span>路程 / 米</span></div><div><strong id="changes"></strong><span>上下楼 / 次</span></div></div><p id="routeHint" class="route-hint"></p></div>
+          <div class="route-summary glass"><span class="small-tag">推荐步行路线</span><p class="course-route-context" hidden></p><h2 class="route-label"></h2><div class="stats"><div><strong id="minutes"></strong><span>步行 / 分钟</span></div><div><strong id="distance"></strong><span>路程 / 米</span></div><div><strong id="changes"></strong><span>上下楼 / 次</span></div></div><p id="routeHint" class="route-hint"></p><button type="button" class="schedule-button course-route-back" data-open-timetable hidden>返回课表</button></div>
           <div class="journey glass"><h3>途经楼层</h3><div id="floorJourney" class="floor-journey"></div><p>点击楼层，查看对应路线段</p></div>
           <div class="route-steps"><div class="route-steps-heading"><div><span class="route-steps-kicker">YOUR JOURNEY</span><h3>分层指引</h3></div><span id="routeStepCount" class="route-step-count"></span></div><p class="route-steps-help">每层一条 · 悬停预览，点击固定路线</p><ol id="routeStepList" class="route-step-list" aria-label="分层路线指引，悬停或点击以在地图中查看"></ol></div>
           <button id="viewDetails" class="route-detail-link" type="button"><span>查看分层路线说明</span><span aria-hidden="true">↗</span></button>
@@ -73,7 +81,40 @@
       <div class="page-heading"><button class="round-button" data-page="routePage" aria-label="返回路线地图">←</button><div><p class="eyebrow">步行指南</p><h1 id="detailTitle" tabindex="-1">跟着路线，轻松到达。</h1></div></div>
       <div class="detail-grid"><aside><div class="detail-summary glass"><span class="small-tag">你的到达指南</span><h2 class="route-label"></h2><p id="detailMeta"></p><div class="detail-symbol" aria-hidden="true">↗</div><button class="primary" data-page="routePage"><span>返回路线地图</span><span class="button-arrow" aria-hidden="true">↗</span></button></div></aside><div><ol id="timeline" class="timeline"></ol><div class="arrival glass"><span aria-hidden="true">✓</span><div><strong>下一站，新的收获。</strong><p>祝你学习顺利。</p></div></div></div></div>
     </section>
+    <section id="timetablePage" hidden aria-labelledby="timetableTitle">
+      <div class="page-heading"><button type="button" class="round-button" data-page="homePage" aria-label="返回首页">←</button><div><p class="eyebrow">MY SCHEDULE</p><h1 id="timetableTitle" tabindex="-1">跟着课程，找到方向。</h1></div></div>
+      <div class="schedule-toolbar liquid-glass">
+        <div><h2 id="timetableName">还没有导入课表</h2><p id="timetableSummary">支持WakeUp树维简易导出文件，课表仅保存在本机。</p></div>
+        <div class="schedule-actions"><button type="button" class="schedule-button schedule-accent" data-import-timetable>导入 HTML / JSON</button><button type="button" id="openScheduleSettings" class="schedule-button">学期与作息</button><button type="button" id="clearTimetable" class="schedule-button" hidden>清除课表</button></div>
+      </div>
+      <input id="timetableFile" type="file" accept=".html,.htm,.json,text/html,application/json" hidden>
+      <p id="timetableNotice" class="schedule-notice" role="status" aria-live="polite" hidden></p>
+      <div id="timetableEmpty" class="schedule-empty liquid-glass"><h2>把本学期的课程带进地图</h2><p>按教程从教务系统导出文件，在这里导入并检查教室匹配结果。课程卡片可直接规划到教室的路线。</p><a href="https://www.wakeup.fun/doc/shuwei.html" target="_blank" rel="noopener noreferrer">查看 WakeUp 树维导出教程 ↗</a></div>
+      <div id="timetableContent" hidden>
+        <div class="schedule-controls liquid-glass">
+          <div class="schedule-week-controls"><button type="button" class="schedule-button" id="schedulePrev" aria-label="上一周">←</button><label class="schedule-sr" for="scheduleWeek">选择教学周</label><select id="scheduleWeek"></select><button type="button" class="schedule-button" id="scheduleNext" aria-label="下一周">→</button><button type="button" class="schedule-button" id="scheduleToday">今天</button></div>
+          <div class="schedule-filters"><label for="scheduleDay">查看</label><select id="scheduleDay"><option value="0">整周</option><option value="1">周一</option><option value="2">周二</option><option value="3">周三</option><option value="4">周四</option><option value="5">周五</option><option value="6">周六</option><option value="7">周日</option></select><label class="schedule-checkbox"><input type="checkbox" id="schedulePinxue" checked>仅品学楼</label></div>
+        </div>
+        <div class="schedule-range-row"><p id="scheduleRange" class="schedule-range"></p><div id="schedulePager" class="schedule-actions" hidden><button type="button" class="schedule-button" id="schedulePagePrev" aria-label="上一页课程">←</button><span id="schedulePageInfo"></span><button type="button" class="schedule-button" id="schedulePageNext" aria-label="下一页课程">→</button></div></div>
+        <div id="scheduleList" class="schedule-list" aria-live="polite"></div>
+      </div>
+    </section>
     <footer class="app-footer"><span><b>UESTC</b> 求实求真 · 大气大为</span><span>校园路径规划原型 &nbsp; · &nbsp; 地图与距离为示意</span></footer>
   </main>
+  <dialog id="scheduleSettingsDialog" class="schedule-dialog schedule-settings-dialog" aria-labelledby="scheduleSettingsTitle"><div class="schedule-dialog-body"><div class="schedule-dialog-heading"><h2 id="scheduleSettingsTitle">学期与作息设置</h2><button type="button" class="schedule-button" id="closeScheduleSettings">关闭设置</button></div>
+      <div id="scheduleSettings" class="schedule-settings">
+        <form id="scheduleSettingsForm">
+          <label class="schedule-date-label" for="semesterStart">第1周周一日期 <input id="semesterStart" type="date" min="2000-01-01" max="2100-12-31"></label>
+          <p class="schedule-help">按截图，2026年10月15日是第7周，首周周一为2026年8月31日。已录入第1～11节时间，第12节可补充；留空的节次仅显示节次信息。</p>
+          <div id="schedulePeriodGrid" class="schedule-period-grid"></div>
+          <p id="scheduleSettingsError" class="error" role="alert" hidden></p>
+          <div class="schedule-actions"><button type="submit" class="schedule-button schedule-accent">保存设置</button><button type="button" class="schedule-button" id="resetScheduleTimes">恢复截图作息</button></div>
+        </form>
+      </div>
+  </div></dialog>
+  <dialog id="courseOriginDialog" class="schedule-dialog" aria-labelledby="courseOriginTitle"><div class="schedule-dialog-body"><div class="schedule-dialog-heading"><h2 id="courseOriginTitle">从哪里去上课？</h2><button type="button" class="schedule-button" id="cancelCourseOrigin">取消</button></div><p id="courseOriginReason" class="schedule-help"></p><form id="courseOriginForm"><label for="courseOriginSelect">本次出发位置</label><select id="courseOriginSelect" required></select><div class="schedule-actions"><button type="submit" class="schedule-button schedule-accent" id="confirmCourseOrigin">从这里出发</button></div></form></div></dialog>
+  <dialog id="timetableImportDialog" class="schedule-dialog" aria-labelledby="importScheduleTitle">
+    <div class="schedule-dialog-body"><div class="schedule-dialog-heading"><h2 id="importScheduleTitle">检查导入结果</h2><button type="button" class="schedule-button" id="cancelTimetableImport" aria-label="取消导入">关闭</button></div><p id="importScheduleName" class="schedule-help"></p><dl id="importScheduleStats" class="schedule-import-stats"></dl><ul id="importScheduleCourses" class="schedule-import-courses"></ul><p id="importScheduleNotes" class="schedule-help"></p><div class="schedule-actions"><button type="button" class="schedule-button schedule-accent" id="confirmTimetableImport">导入这份课表</button></div></div>
+  </dialog>
 </body>
 </html>
